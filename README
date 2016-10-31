@@ -16,6 +16,12 @@ Datalink Layer Header:
 TODO:
     General:
         - Need to collect and report statistics:
+            - Number of data-link frames transmitted
+            - Number of data-link retransmissions
+            - Number of data-link acknowledgements sent
+            - Number of data-link acknowledgements received
+            - Number of duplicate frames received
+            - Total number of bytes
 
     Application Layer:
         - Should have max packet payload size 256 bytes.
