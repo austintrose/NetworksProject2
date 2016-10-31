@@ -82,4 +82,4 @@ class DataLinkLayer(object):
         payload_len = struct.pack("!I", len(data))
         checksum = self.checksum(payload_len + data)
 
-        return payload_len + checksum
+        return checksum + payload_len
