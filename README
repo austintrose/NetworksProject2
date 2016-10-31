@@ -1,0 +1,32 @@
+CS513 Project 2 done by:
+    Austin Rose (atrose)
+    Mohit Hapani (mkhapani)
+    Zhanna Kaufman (zkaufman)
+
+Server usage:
+  python project2.py
+
+Client usage:
+  python project2.py --client
+
+Datalink Layer Header:
+1 byte  unsigned | checksum
+4 bytes unsigned | datasize
+
+TODO:
+    General:
+        - Need to collect and report statistics:
+
+    Application Layer:
+        - Should have max packet payload size 256 bytes.
+        - Must define a few commands, and one command must involve a file transfer.
+
+    Data Link Layer:
+        - Implement reliable transport with ACKs, NACKs, sequence numbers, etc.
+        - Need to define size of one data link frame, and size of window (probably like 10 frames).
+        - Need mechanism for one application layer packet becoming multiple frames.
+        - Timers for retransmitting unacked: http://stackoverflow.com/a/18406263
+
+    Physical Layer:
+        - Drop rate integer 0 to 100, probability of dropping each full data link frame.
+        - Corrupt rate integer 0 to 100, probability of randomly altering one byte in a data link frame.
