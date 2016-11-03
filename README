@@ -4,10 +4,10 @@ CS513 Project 2 done by:
     Zhanna Kaufman (zkaufman)
 
 Server usage:
-  python project2.py
+  python asciivids.py
 
 Client usage:
-  python project2.py --client
+  python asciivids.py --client
 
 Datalink Layer Header:
 1 byte  unsigned | checksum

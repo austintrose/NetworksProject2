@@ -12,6 +12,7 @@ class PhysicalLayer(object):
         p.add_argument('--client', action='store_true')
         p.add_argument('--drop', type=int, default=DEFAULT_DROP_RATE)
         p.add_argument('--corrupt', type=int, default=DEFAULT_CORRUPTION_RATE)
+        p.add_argument('--sr', action='store_true')
 
         args = p.parse_args()
 
@@ -23,6 +24,9 @@ class PhysicalLayer(object):
 
         # Store whether we're started as client or server.
         self.is_client = args.client
+
+        # Store whether to switch from GoBackN to Selective Repeat Protocol
+        self.is_sr = args.sr
 
         # Store frame drop rate.
         self.drop_rate = float(args.drop) / 100

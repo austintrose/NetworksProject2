@@ -4,22 +4,38 @@ import struct
 
 from utils import *
 
-
 class DataLinkLayer(object):
     def __init__(self, physical_layer):
         self.physical_layer = physical_layer
         self.received_data_buffer = ""
+        self.is_sr = physical_layer.is_sr
+        self.seqnum = 0
+        self.acknum = 0
+        send_window = []
+        if self.is_sr:
+            recv_window = []
 
     def recv_one_frame(self):
-        # Expected checksum will be first byte of a new frame.
+        # Expected checksum will be the first byte of a new frame.
         checksum = self.physical_layer.recv(1)
+
+        #Seqnum will be next four bytes of a new frame
+        seqnum_packed = self.physical_layer.recv(4)
+        seqnum_unpacked = struct.unpack("!I", seqnum_packed)[0]
+        print "Seqnum unpacked " + str(seqnum_unpacked)
+
+        #Acknum will be next four bytes of a new frame
+        acknum_packed = self.physical_layer.recv(4)
+        acknum_unpacked = struct.unpack("!I", acknum_packed)[0]
+        print "Acknum unpacked " + str(acknum_unpacked)
 
         # Payload len with be next 4 bytes of a new frame.
         payload_len_packed = self.physical_layer.recv(4)
         payload_len_unpacked = struct.unpack("!I", payload_len_packed)[0]
 
         # Receive enough for remaining data.
-        payload = self.physical_layer.recv(payload_len_unpacked)
+        if(payload_len_unpacked > 0):
+            payload = self.physical_layer.recv(payload_len_unpacked)
 
         # Compute checksum of data received.
         observed_checksum = self.checksum(payload_len_packed + payload)
@@ -28,6 +44,11 @@ class DataLinkLayer(object):
         if checksum == observed_checksum:
             self.received_data_buffer += payload
 
+        #Acknum to send is the sequence number just received
+        self.acknum = seqnum_unpacked
+
+        if(payload_len_unpacked == 0):
+            header = self.build_header(NULL)
         # Do nothing if this didn't work.
         # Obviously not what we want.
         # Need to send the nack. Or something.
@@ -80,6 +101,8 @@ class DataLinkLayer(object):
         """
 
         payload_len = struct.pack("!I", len(data))
-        checksum = self.checksum(payload_len + data)
+        acknum = struct.pack("!I", self.acknum)
+        aseqnum = struct.pack("!I", self.seqnum)
+        checksum = self.checksum(acknum + aseqnum + payload_len + data)
 
-        return checksum + payload_len
+        return checksum + aseqnum + acknum + payload_len
