@@ -38,22 +38,33 @@ class DataLinkLayer(object):
             payload = self.physical_layer.recv(payload_len_unpacked)
 
         # Compute checksum of data received.
-        observed_checksum = self.checksum(payload_len_packed + payload)
+        observed_checksum = self.checksum(seqnum_packed + acknum_packed + payload_len_packed + payload)
 
         # Compare checksums.
         if checksum == observed_checksum:
+            
+            #Add the newly received data into the receive buffer
             self.received_data_buffer += payload
+            
+            #Send an acknowkedgement
+            self.acknum = seqnum_unpacked
+            print "Sending acknum " + str(self.acknum)
+            header = self.build_header("")
+            self.physical_layer.send(header)
 
-        #Acknum to send is the sequence number just received
-        self.acknum = seqnum_unpacked
 
-        if(payload_len_unpacked == 0):
-            header = self.build_header(NULL)
         # Do nothing if this didn't work.
         # Obviously not what we want.
         # Need to send the nack. Or something.
         else:
             debug_log("Checksum failed.")
+        #Acknum to send is the sequence number just received
+        self.acknum = seqnum_unpacked
+        if(payload_len_unpacked == 0):
+            
+            header = self.build_header(NULL)
+
+
 
     def recv(self, n):
         """
@@ -72,15 +83,24 @@ class DataLinkLayer(object):
         """
         Send data through the data-link layer.
         """
+        #separate the data into 128 bit chunks
+        for i in range(0,len(data) -1, 128):
+            
+            #increment the sequence number of the data
+            self.seqnum = self.seqnum + 1
+            print "Sending seqnum " + str(self.seqnum)
 
-        # Build the header.
-        header = self.build_header(data)
+            #Get teh data chunk
+            tempdata = data[i:i+127]
 
-        # Attach the header to the data.
-        full_frame = header + data
+            # Build the header.
+            header = self.build_header(tempdata)
 
-        # Send the full frame through the physical layer.
-        self.physical_layer.send(full_frame)
+            # Attach the header to the data.
+            full_frame = header + tempdata
+
+            # Send the full frame through the physical layer.
+            self.physical_layer.send(full_frame)
 
     @staticmethod
     def checksum(data):
