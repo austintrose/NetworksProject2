@@ -1,77 +1,126 @@
 # The struct library is used for packing exact binary data.
 # https://docs.python.org/2/library/struct.html
 import struct
+import time
+from threading import Thread, Timer
 
 from utils import *
+
 
 class DataLinkLayer(object):
     def __init__(self, physical_layer):
         self.physical_layer = physical_layer
+
+        # Buffer for data that has been processed correctly, but that the
+        # application has not requested.
         self.received_data_buffer = ""
-        self.is_sr = physical_layer.is_sr
-        self.seqnum = 0
-        self.acknum = 0
-        send_window = []
-        if self.is_sr:
-            recv_window = []
+
+        # Buffer for data that the application has sent, but that has not been
+        # acked yet. This must not be longer than `self.window_len`
+        self.send_window = []
+
+        # What packet send_window starts at.
+        self.window_base = 0
+
+        # Next packet to send.
+        self.next_seq = 0
+
+        # Number of unacked packets which can remain in the window at once.
+        self.window_len = 10
+
+        # Expected next sequence_num.
+        self.ack = 0
+
+        # Start the dedicated receiver thread.
+        self.start_receive_thread()
+
+    def start_receive_thread(self):
+        self.receive_thread = Thread(target=self.receive_thread_func)
+        self.receive_thread.setDaemon(True)
+        self.receive_thread.start()
+
+    def receive_thread_func(self):
+        while True:
+            self.recv_one_frame()
+            time.sleep(0.05)
+
+    def send_blank_ack(self):
+        new_packet = {'seq': self.next_seq, 'data': ''}
+        self.send_packet(new_packet)
 
     def recv_one_frame(self):
-        # Expected checksum will be the first byte of a new frame.
+
+        # Expected checksum will be first byte of a new frame.
         checksum = self.physical_layer.recv(1)
 
-        #Seqnum will be next four bytes of a new frame
-        seqnum_packed = self.physical_layer.recv(4)
-        seqnum_unpacked = struct.unpack("!I", seqnum_packed)[0]
-        print "Seqnum unpacked " + str(seqnum_unpacked)
+        # Sequence number is next 4 bytes.
+        seq_num_packed = self.physical_layer.recv(4)
+        seq_num_unpacked = struct.unpack("!I", seq_num_packed)[0]
 
-        #Acknum will be next four bytes of a new frame
-        acknum_packed = self.physical_layer.recv(4)
-        acknum_unpacked = struct.unpack("!I", acknum_packed)[0]
-        print "Acknum unpacked " + str(acknum_unpacked)
+        # Acknowledgement number is next 4 bytes.
+        ack_num_packed = self.physical_layer.recv(4)
+        ack_num_unpacked = struct.unpack("!I", ack_num_packed)[0]
 
-        # Payload len with be next 4 bytes of a new frame.
-        payload_len_packed = self.physical_layer.recv(4)
-        payload_len_unpacked = struct.unpack("!I", payload_len_packed)[0]
+        # Payload len is next byte.
+        payload_len_packed = self.physical_layer.recv(1)
+        payload_len_unpacked = struct.unpack("!B", payload_len_packed)[0]
 
         # Receive enough for remaining data.
-        if(payload_len_unpacked > 0):
-            payload = self.physical_layer.recv(payload_len_unpacked)
+        payload = self.physical_layer.recv(payload_len_unpacked)
+
+        # This is the data which should match the checksum.
+        to_check = seq_num_packed + ack_num_packed + payload_len_packed + \
+                   payload
 
         # Compute checksum of data received.
-        observed_checksum = self.checksum(seqnum_packed + acknum_packed + payload_len_packed + payload)
+        observed_checksum = self.checksum(to_check)
+
 
         # Compare checksums.
         if checksum == observed_checksum:
-            
-            #Add the newly received data into the receive buffer
-            self.received_data_buffer += payload
-            
-            #Send an acknowkedgement
-            self.acknum = seqnum_unpacked
-            print "Sending acknum " + str(self.acknum)
-            header = self.build_header("")
-            self.physical_layer.send(header)
 
+            # This is just a blank ack of our data.
+            if len(payload) == 0:
+                self.received_ack(ack_num_unpacked)
+
+            # This is the next expected data chunk.
+            elif seq_num_unpacked == self.ack:
+                self.ack = seq_num_unpacked + 1
+                self.received_data_buffer += payload
+                self.send_blank_ack()
 
         # Do nothing if this didn't work.
-        # Obviously not what we want.
-        # Need to send the nack. Or something.
         else:
             debug_log("Checksum failed.")
-        #Acknum to send is the sequence number just received
-        self.acknum = seqnum_unpacked
-        if(payload_len_unpacked == 0):
-            
-            header = self.build_header(NULL)
+            self.send_blank_ack()
 
 
+        #debug_log("DL recv:\n" + " ".join(hex(ord(n)) for n in checksum + to_check) + "\n")
+
+    def received_ack(self, ack_num):
+        """
+        Pop things off the window which have been acked.
+        """
+
+        while True:
+            if len(self.send_window) == 0:
+                return
+
+            elif self.send_window[0]['seq'] < ack_num:
+                self.send_window.pop(0)
+                self.window_base += 1
+
+            else:
+                return
 
     def recv(self, n):
         """
         Receive n correctly-ordered bytes from the data-link layer.
         """
-        if len(self.received_data_buffer) < n:
-            self.recv_one_frame()
+
+        # Block the application from receiving until we have enough data.
+        while len(self.received_data_buffer) < n:
+            pass
 
         # Remove `n` bytes from beginning of received data buffer.
         to_return, self.received_data_buffer = \
@@ -83,24 +132,41 @@ class DataLinkLayer(object):
         """
         Send data through the data-link layer.
         """
-        #separate the data into 128 bit chunks
-        for i in range(0,len(data) -1, 128):
-            
-            #increment the sequence number of the data
-            self.seqnum = self.seqnum + 1
-            print "Sending seqnum " + str(self.seqnum)
 
-            #Get teh data chunk
-            tempdata = data[i:i+127]
+        if len(data) > 256:
+            raise Exception('Chunk from application too large.')
 
-            # Build the header.
-            header = self.build_header(tempdata)
+        # Block until the window can take one more packet.
+        while len(self.send_window) + 1 > self.window_len:
+            time.sleep(0.01)
 
-            # Attach the header to the data.
-            full_frame = header + tempdata
+        # New item to add to the window.
+        new_packet = {'seq': self.next_seq, 'data': data}
 
-            # Send the full frame through the physical layer.
-            self.physical_layer.send(full_frame)
+        # Put the given data at the end of the window.
+        self.send_window.append(new_packet)
+
+        # Send it along the physical layer.
+        self.send_packet(new_packet)
+
+        # Start a timer for resending if this wasn't acked.
+        self.start_timer_for(self.next_seq)
+        self.next_seq += 1
+
+    def send_packet(self, packet):
+        packet = self.build_packet(packet['data'], packet['seq'], self.ack)
+        self.physical_layer.send(packet)
+        # debug_log("DL send:\n" + " ".join(hex(ord(n)) for n in packet))
+
+    def start_timer_for(self, expected):
+        t = Timer(0.1, self.resend_on_timeout, [expected])
+        t.start()
+
+    def resend_on_timeout(self, expected):
+        if self.window_base < expected:
+            for packet in self.send_window:
+                self.send_packet(packet)
+
 
     @staticmethod
     def checksum(data):
@@ -113,16 +179,26 @@ class DataLinkLayer(object):
 
         return chr(checksum)
 
-    def build_header(self, data):
-        """
-        The data link layer header is:
-        1 byte  unsigned | checksum of rest of data (header + payload)
-        4 bytes unsigned | length of payload to follow
-        """
+    def build_packet(self, payload, seq, ack):
+        seq_num = struct.pack("!I", seq)
+        ack_num = struct.pack("!I", ack)
+        payload_len = struct.pack("!B", len(payload))
 
-        payload_len = struct.pack("!I", len(data))
-        acknum = struct.pack("!I", self.acknum)
-        aseqnum = struct.pack("!I", self.seqnum)
-        checksum = self.checksum(acknum + aseqnum + payload_len + data)
+        # The data to prepend a checksum to.
+        to_check = seq_num + ack_num + payload_len + payload
 
-        return checksum + aseqnum + acknum + payload_len
+        # Compute checksum.
+        checksum = self.checksum(to_check)
+
+        # Return full packet.
+        return checksum + to_check
+
+
+class DataLinkLayer_GBN(DataLinkLayer):
+    def __init__(self, physical_layer):
+        super(DataLinkLayer_GBN, self).__init__(physical_layer)
+
+
+class DataLinkLayer_SR(DataLinkLayer):
+    def __init__(self, physical_layer):
+        super(DataLinkLayer_SR, self).__init__(physical_layer)

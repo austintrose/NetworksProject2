@@ -1,80 +1,44 @@
-import argparse
 import socket
 import random
+import time
+
+from threading import Thread
 
 from utils import *
 
 
 class PhysicalLayer(object):
-    def __init__(self):
-        # Parse command line args.
-        p = argparse.ArgumentParser()
-        p.add_argument('--client', action='store_true')
-        p.add_argument('--drop', type=int, default=DEFAULT_DROP_RATE)
-        p.add_argument('--corrupt', type=int, default=DEFAULT_CORRUPTION_RATE)
-        p.add_argument('--sr', action='store_true')
 
-        args = p.parse_args()
-
+    def __init__(self, drop_rate, corrupt_rate):
         # Create a socket.
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
         # Set SO_REUSEADDR option.
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-        # Store whether we're started as client or server.
-        self.is_client = args.client
-
-        # Store whether to switch from GoBackN to Selective Repeat Protocol
-        self.is_sr = args.sr
-
         # Store frame drop rate.
-        self.drop_rate = float(args.drop) / 100
+        self.drop_rate = float(drop_rate) / 100
 
         # Store frame corrupt rate.
-        self.corrupt_rate = float(args.corrupt) / 100
+        self.corrupt_rate = float(drop_rate) / 100
 
-        # Initialize as appropriate, either as client or as server.
-        if self.is_client:
-            self.init_client()
-        else:
-            self.init_server()
+        # The receive thread will constantly put things in this buffer.
+        self.received_data_buffer = ""
 
-    def init_client(self):
-        """
-        Initialize physical layer as application client.
-        """
-        debug_log("Client starting...")
         debug_log("Frame drop rate: %s." % self.drop_rate)
         debug_log("Frame corrupt rate: %s." % self.corrupt_rate)
 
-        # Connect to server.
-        try:
-            self.sock.connect(SERVER_ADDRESS)
-        except socket.error:
-            print "Connection refused. Exiting."
-            sys.exit(0)
-        debug_log("Client started.")
+    def receive_thread_func(self):
+        while True:
+            got = self.sock.recv(128)
 
-    def init_server(self):
-        """
-        Initialize physical layer as application server.
-        """
-        debug_log("Server starting...")
-        debug_log("Frame drop rate: %s." % self.drop_rate)
-        debug_log("Frame corrupt rate: %s." % self.corrupt_rate)
+            if got == '':
+                print "Connection ended. Nothing to do. Ctrl-C to exit."
+                exit(0)
 
-        # Bind socket.
-        self.sock.bind(SERVER_ADDRESS)
-
-        # Start listening.
-        self.sock.listen(1)
-
-        debug_log("Server listening...")
-
-        # Accept the first connection that comes.
-        self.sock, self.remote_addr = self.sock.accept()
-        debug_log("Accepted connection from %s." % str(self.remote_addr))
+            self.received_data_buffer += got
+            # debug_log("PL recv:\n" + " ".join(hex(ord(n)) for n in got) + "\n")
+            time.sleep(0.05)
 
     def decide_to_drop(self):
         """
@@ -100,18 +64,24 @@ class PhysicalLayer(object):
         corrupt_byte = chr(random.randint(0, 255))
 
         # Corrupt the data and return it.
-        data = list(data)
-        data[corrupt_index] = corrupt_byte
-        data = "".join(data)
+        c_data = list(data)
+        c_data[corrupt_index] = corrupt_byte
+        c_data = "".join(c_data)
 
         debug_log("Corrupted frame.")
 
-        return data
+        return c_data
+
+    def start_receive_thread(self):
+        self.receive_thread = Thread(target=self.receive_thread_func)
+        self.receive_thread.setDaemon(True)
+        self.receive_thread.start()
 
     def send(self, data):
         """
         Send data through the physical layer.
         """
+        # debug_log("PL send:\n" + " ".join(hex(ord(n)) for n in data) + "\n")
 
         # Maybe drop and return immediately.
         if self.decide_to_drop():
@@ -128,10 +98,47 @@ class PhysicalLayer(object):
         """
         Receive up to n bytes of data from the physical layer.
         """
-        got = self.sock.recv(n)
 
-        if got == '':
-            print "Connection ended. Exiting."
+        # Block until enough data is available.
+        while len(self.received_data_buffer) < n:
+            pass
+
+        to_return, self.received_data_buffer = \
+            self.received_data_buffer[:n], self.received_data_buffer[n:]
+
+        return to_return
+
+class PhysicalLayer_Client(PhysicalLayer):
+    def __init__(self, drop_rate, corrupt_rate):
+        super(PhysicalLayer_Client, self).__init__(drop_rate, corrupt_rate)
+
+        # Connect to server.
+        try:
+            self.sock.connect(SERVER_ADDRESS)
+        except socket.error:
+            print "Connection refused. Exiting."
             sys.exit(0)
+        debug_log("Physical Layer client started.")
 
-        return got
+        # Launch the receiving thread.
+        self.start_receive_thread()
+
+
+class PhysicalLayer_Server(PhysicalLayer):
+    def __init__(self, drop_rate, corrupt_rate):
+        super(PhysicalLayer_Server, self).__init__(drop_rate, corrupt_rate)
+
+        # Bind socket.
+        self.sock.bind(SERVER_ADDRESS)
+
+        # Start listening.
+        self.sock.listen(1)
+
+        debug_log("Server listening...")
+
+        # Accept the first connection that comes.
+        self.sock, self.remote_addr = self.sock.accept()
+        debug_log("Accepted connection from %s." % str(self.remote_addr))
+
+        # Launch the receiving thread.
+        self.start_receive_thread()
