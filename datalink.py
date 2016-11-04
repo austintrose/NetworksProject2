@@ -40,7 +40,7 @@ class DataLinkLayer(object):
     def receive_thread_func(self):
         while True:
             self.recv_one_frame()
-            time.sleep(0.05)
+            time.sleep(0.005)
 
     def recv(self, n):
         """
@@ -192,7 +192,7 @@ class DataLinkLayer_GBN(DataLinkLayer):
 
         # Block until the window can take one more packet.
         while len(self.send_window) + 1 > self.window_len:
-            time.sleep(0.01)
+            time.sleep(0.001)
 
         # New item to add to the window.
         new_packet = {'seq': self.next_seq, 'data': data}
@@ -353,7 +353,7 @@ class DataLinkLayer_SR(DataLinkLayer):
 
         # Block until the window can take one more packet.
         while len(self.send_window) + 1 > self.window_len:
-            time.sleep(0.01)
+            time.sleep(0.001)
 
         # New item to add to the window.
         new_packet = {'seq': self.next_seq, 'ack': 0, 'acked': False, 'data': data}

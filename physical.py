@@ -38,7 +38,7 @@ class PhysicalLayer(object):
 
             self.received_data_buffer += got
             # debug_log("PL recv:\n" + " ".join(hex(ord(n)) for n in got) + "\n")
-            time.sleep(0.05)
+            time.sleep(0.005)
 
     def decide_to_drop(self):
         """

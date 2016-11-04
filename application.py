@@ -5,9 +5,11 @@ from utils import *
 
 # Constant strings for names of command types the client can issue.
 LIST_QUERY = "LIST_QUERY"
+STREAM_QUERY = "STREAM_QUERY"
 
 # Constant strings for names of response types the server can issue.
 LIST_ANSWER = "LIST_ANSWER"
+STREAM_ANSWER = "STREAM_ANSWER"
 
 class ApplicationLayer(object):
     def __init__(self, datalink_layer):
@@ -20,7 +22,9 @@ class ApplicationLayer(object):
         # Mapping from command name to one-byte code.
         self.command_codes = {
             LIST_QUERY: 'A',
-            LIST_ANSWER: 'B'
+            LIST_ANSWER: 'B',
+            STREAM_QUERY: 'C',
+            STREAM_ANSWER: 'D'
         }
 
     def send(self, data):
@@ -92,12 +96,16 @@ class ApplicationLayer(object):
 
 
 class ClientApplicationLayer(ApplicationLayer):
+    requesting_filename = "default.mov"
+    requesting_file = None
+
     def __init__(self, datalink_layer):
         super(ClientApplicationLayer, self).__init__(datalink_layer)
 
         # Handler functions for different command codes.
         self.command_handlers = {
-            'B': self.handle_LIST_ANSWER
+            'B': self.handle_LIST_ANSWER,
+            'D': self.handle_STREAM_ANSWER
         }
 
         # Start the receiving thread.
@@ -110,8 +118,13 @@ class ClientApplicationLayer(ApplicationLayer):
             if user_command == "LIST\n":
                 self.send_command(LIST_QUERY)
 
+            elif "STREAM " in user_command:
+                payload = user_command[user_command.find(" ")+1:user_command.find("\n")]
+                self.requesting_filename = payload
+                self.send_command(STREAM_QUERY, payload)
+
             else:
-                print "Available commands:\nLIST"
+                print "Available commands:\n  LIST\n  STREAM <videoname>"
 
     def handle_LIST_ANSWER(self, payload):
         """
@@ -120,6 +133,20 @@ class ClientApplicationLayer(ApplicationLayer):
 
         print payload
 
+    def handle_STREAM_ANSWER(self, payload):
+        print "Got STREAM_ANSWER, ", len(payload)
+        if self.requesting_file is None:
+            self.requesting_file = open("asciivids_" + self.requesting_filename, 'w')
+            print 'Now receiving %s' % self.requesting_filename
+
+        if payload == "":
+            self.requesting_file.close()
+            self.requesting_file = None
+            print 'Done receiving %s' % self.requesting_filename
+
+        else:
+            self.requesting_file.write(payload)
+
 
 class ServerApplicationLayer(ApplicationLayer):
     def __init__(self, datalink_layer):
@@ -127,7 +154,8 @@ class ServerApplicationLayer(ApplicationLayer):
 
         # Handler functions for different command codes.
         self.command_handlers = {
-            'A': self.handle_LIST_QUERY
+            'A': self.handle_LIST_QUERY,
+            'C': self.handle_STREAM_QUERY
         }
 
         # Main loop as server.
@@ -137,6 +165,20 @@ class ServerApplicationLayer(ApplicationLayer):
         """
         Handler for a LIST_QUERY message the server receives.
         """
-        self.send_command(LIST_ANSWER, 'wowowowow')
+        payload = "Available videos: starwars.mov"
+        self.send_command(LIST_ANSWER, payload)
+
+    def handle_STREAM_QUERY(self, payload):
+        print "Attmpt to open %s" % payload
+        with open(payload, 'r') as f:
+            while True:
+                got = f.read(128)
+                print "Read 128 from file."
+                if got == "":
+                    break
+                self.send_command(STREAM_ANSWER, got)
+                print "Sent 128"
+            self.send_command(STREAM_ANSWER)
+            print "Sent blank pl"
 
 
