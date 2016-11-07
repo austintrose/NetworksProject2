@@ -37,14 +37,18 @@ class PhysicalLayer(object):
                 exit(0)
 
             self.received_data_buffer += got
-            # debug_log("PL recv:\n" + " ".join(hex(ord(n)) for n in got) + "\n")
-            time.sleep(0.005)
+            time.sleep(0.01)
 
     def decide_to_drop(self):
         """
         Returns True, at a probablity configured by the --drop command line
         parameter.
         """
+
+        # Don't give a chance to drop if rate is 0.0.
+        if self.drop_rate == 0.0:
+            return False
+
         return random.random() < self.drop_rate
 
     def maybe_corrupt(self, data):
@@ -53,7 +57,11 @@ class PhysicalLayer(object):
         configured by the --corrupt command line parameter.
         """
 
-        # Return immediately, or corrupt the data.
+        # Don't give it a chance to corrupt if rate is 0.0.
+        if self.corrupt_rate == 0.0:
+            return data
+
+        # If random doesn't pass rate, then return without corrupting.
         if random.random() > self.corrupt_rate:
             return data
 
@@ -68,8 +76,6 @@ class PhysicalLayer(object):
         c_data[corrupt_index] = corrupt_byte
         c_data = "".join(c_data)
 
-        debug_log("Corrupted frame.")
-
         return c_data
 
     def start_receive_thread(self):
@@ -81,11 +87,9 @@ class PhysicalLayer(object):
         """
         Send data through the physical layer.
         """
-        # debug_log("PL send:\n" + " ".join(hex(ord(n)) for n in data) + "\n")
 
         # Maybe drop and return immediately.
         if self.decide_to_drop():
-            debug_log("Dropped frame.")
             return
 
         # Maybe corrupt the data.

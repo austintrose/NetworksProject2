@@ -33,7 +33,6 @@ class ApplicationLayer(object):
         """
 
         self.datalink_layer.send(data)
-        # debug_log("AL send:\n" + " ".join(hex(ord(n)) for n in data))
 
     def recv(self, n):
         """
@@ -41,7 +40,6 @@ class ApplicationLayer(object):
         """
 
         got = self.datalink_layer.recv(n)
-        # debug_log("AL got:\n" + " ".join(hex(ord(n)) for n in got))
         return got
 
     def send_command(self, command_name, payload=''):
@@ -134,15 +132,13 @@ class ClientApplicationLayer(ApplicationLayer):
         print payload
 
     def handle_STREAM_ANSWER(self, payload):
-        print "Got STREAM_ANSWER, ", len(payload)
         if self.requesting_file is None:
             self.requesting_file = open("asciivids_" + self.requesting_filename, 'w')
-            print 'Now receiving %s' % self.requesting_filename
 
         if payload == "":
             self.requesting_file.close()
             self.requesting_file = None
-            print 'Done receiving %s' % self.requesting_filename
+            print "Done receiving %s" % self.requesting_filename
 
         else:
             self.requesting_file.write(payload)
@@ -169,16 +165,12 @@ class ServerApplicationLayer(ApplicationLayer):
         self.send_command(LIST_ANSWER, payload)
 
     def handle_STREAM_QUERY(self, payload):
-        print "Attmpt to open %s" % payload
         with open(payload, 'r') as f:
             while True:
                 got = f.read(128)
-                print "Read 128 from file."
                 if got == "":
                     break
                 self.send_command(STREAM_ANSWER, got)
-                print "Sent 128"
             self.send_command(STREAM_ANSWER)
-            print "Sent blank pl"
 
 
