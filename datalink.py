@@ -218,7 +218,7 @@ class DataLinkLayer_GBN(DataLinkLayer):
         print "Sent SEQ:%d ACK:%d" % (pk['seq'], self.ack)
 
     def start_timer_for(self, seqnum):
-        t = Timer(0.3, self.resend_on_timeout, [seqnum])
+        t = Timer(0.5, self.resend_on_timeout, [seqnum])
         t.start()
 
 class DataLinkLayer_SR(DataLinkLayer):
