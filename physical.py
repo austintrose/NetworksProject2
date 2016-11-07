@@ -20,7 +20,7 @@ class PhysicalLayer(object):
         self.drop_rate = float(drop_rate) / 100
 
         # Store frame corrupt rate.
-        self.corrupt_rate = float(drop_rate) / 100
+        self.corrupt_rate = float(corrupt_rate) / 100
 
         # The receive thread will constantly put things in this buffer.
         self.received_data_buffer = ""

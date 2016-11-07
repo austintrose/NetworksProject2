@@ -1,7 +1,7 @@
 import sys
 
 # Verbose mode.
-DEBUG = False
+DEBUG = True
 
 # Port the application server listens on.
 SERVER_PORT = 8765
