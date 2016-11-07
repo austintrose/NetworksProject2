@@ -33,7 +33,7 @@ class DataLinkLayer(object):
     def receive_thread_func(self):
         while True:
             self.recv_one_frame()
-            time.sleep(0.1)
+            time.sleep(0.05)
 
     def recv(self, n):
         """
@@ -59,11 +59,20 @@ class DataLinkLayer(object):
         for character in data:
             checksum += ord(character)
 
-        # Keep it below two byte unsigned max.
-        checksum = checksum % 65536
+        for character in data[::2]:
+            checksum += ord(character)
+
+        for character in data[1::2]:
+            checksum += ord(character)
+
+        for character in data[1::3]:
+            checksum += ord(character)
+
+        # Keep it below four byte unsigned max.
+        checksum = checksum % (2**32)
 
         if pack:
-            return struct.pack("!H", checksum)
+            return struct.pack("!I", checksum)
         else:
             return checksum
 
@@ -103,8 +112,8 @@ class DataLinkLayer_GBN(DataLinkLayer):
     def recv_one_frame(self):
 
         # Expected checksum will be first 2 bytes of a new frame.
-        checksum_packed = self.physical_layer.recv(2)
-        checksum_unpacked = struct.unpack("!H", checksum_packed)[0]
+        checksum_packed = self.physical_layer.recv(4)
+        checksum_unpacked = struct.unpack("!I", checksum_packed)[0]
 
         # Sequence number is next 4 bytes.
         seq_num_packed = self.physical_layer.recv(4)
@@ -133,24 +142,16 @@ class DataLinkLayer_GBN(DataLinkLayer):
 
         # Compare checksums.
         if checksum_unpacked == observed_checksum:
-
-            # This is just a blank ack of our data.
-            if payload_len_unpacked == 0:
-                debug_log("Received blank. SEQ: %d, ACK: %d" % (
-                    seq_num_unpacked, ack_num_unpacked))
-                self.received_ack(ack_num_unpacked)
+            print "Got SEQ:%d ACK:%d" % (seq_num_unpacked, ack_num_unpacked)
+            self.received_ack(ack_num_unpacked)
 
             # This is an expected data chunk
-            elif seq_num_unpacked == self.ack:
-                debug_log("Received data. SEQ: %d, ACK: %d" % (
-                    seq_num_unpacked, ack_num_unpacked))
+            if seq_num_unpacked == self.ack and len(payload) > 0:
                 self.received_data_buffer += payload
                 self.ack = seq_num_unpacked + 1
-                self.received_ack(ack_num_unpacked)
-                self.send_blank_ack()
 
-            else:
-                self.send_blank_ack()
+        if payload_len_unpacked != 0:
+            self.send_blank_ack()
 
 
     def received_ack(self, ack_num):
@@ -163,25 +164,25 @@ class DataLinkLayer_GBN(DataLinkLayer):
         if len(self.send_window) == 0:
             return
 
-
         while True:
             if self.send_window and self.send_window[0]['seq'] < ack_num:
-                self.send_window.pop(0)
+                self.send_window = self.send_window[1:]
             else:
                 break
 
     def resend_on_timeout(self, seqnum):
-        debug_log("Resend on timeout for seq %d" % seqnum)
-
         if len(self.send_window) == 0:
             return
 
-        # If the timer runs out resend all packets in window
-        for packet in self.send_window:
-            if packet['seq'] <= seqnum:
-                self.send_packet(packet)
+        if self.ack <= seqnum:
+            for packet in self.send_window:
+                if packet['seq'] <= seqnum:
+                    self.send_packet(packet)
+            if len(self.send_window) != 0:
+                self.start_timer_for(self.send_window[0]['seq'])
+        else:
+            self.start_timer_for(self.next_seq - 1)
 
-        self.start_timer_for(self.next_seq - 1)
 
     def send(self, data):
         """
@@ -213,16 +214,11 @@ class DataLinkLayer_GBN(DataLinkLayer):
 
     def send_packet(self, pk):
         packet = self.build_packet(pk['data'], pk['seq'])
-        if len(pk['data']) > 2:
-            debug_log("Sending data. SEQ: %d, ACK: %d" % (pk['seq'],
-                                                          self.ack))
-        else:
-            debug_log("Sending blank. SEQ: %d, ACK: %d" % (pk['seq'],
-                                                          self.ack))
         self.physical_layer.send(packet)
+        print "Sent SEQ:%d ACK:%d" % (pk['seq'], self.ack)
 
     def start_timer_for(self, seqnum):
-        t = Timer(1, self.resend_on_timeout, [seqnum])
+        t = Timer(0.3, self.resend_on_timeout, [seqnum])
         t.start()
 
 class DataLinkLayer_SR(DataLinkLayer):

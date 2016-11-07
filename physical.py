@@ -37,7 +37,7 @@ class PhysicalLayer(object):
                 exit(0)
 
             self.received_data_buffer += got
-            time.sleep(0.01)
+            time.sleep(0.001)
 
     def decide_to_drop(self):
         """
