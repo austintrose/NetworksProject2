@@ -1,0 +1,309 @@
+MODE  DROP  CORRUPT ROLE  ACKS_RECEIVED ACKS_SENT FRAMES_TRANS  DUP_RECEIVED  RETRANS TIME
+SR  0.00  0.00  Client  1 2 3 0 0 0.00
+SR  0.00  0.00  Server  1 1 3 0 0 0.00
+
+SR  0.00  0.00  Client  1 2 3 0 0 0.00
+SR  0.00  0.00  Server  1 1 3 0 0 0.00
+
+SR  0.00  0.00  Client  1 2 3 0 0 0.01
+SR  0.00  0.00  Server  1 1 3 0 0 0.00
+
+SR  0.00  0.00  Client  1 2 3 0 0 0.01
+SR  0.00  0.00  Server  1 1 3 0 0 0.00
+
+SR  0.00  0.00  Client  1 1 3 0 0 0.01
+SR  0.00  0.00  Server  1 1 3 0 0 0.00
+
+SR  0.00  0.00  Client  1 2 3 0 0 0.01
+SR  0.00  0.00  Server  1 1 3 0 0 0.00
+
+SR  0.00  0.00  Client  1 1 3 0 0 0.00
+SR  0.00  0.00  Server  1 1 3 0 0 0.00
+
+SR  0.00  0.00  Client  1 1 3 0 0 0.01
+SR  0.00  0.00  Server  1 1 3 0 0 0.00
+
+SR  0.00  0.00  Client  1 2 3 0 0 0.01
+SR  0.00  0.00  Server  1 1 3 0 0 0.00
+
+SR  0.00  0.00  Client  1 2 3 0 0 0.01
+SR  0.00  0.00  Server  1 1 3 0 0 0.00
+
+
+SR  0.05  0.05  Client  0 1 3 0 0 0.01
+SR  0.05  0.05  Server  1 1 3 0 0 0.00
+
+SR  0.05  0.05  Client  1 1 3 0 0 0.10
+SR  0.05  0.05  Server  1 1 3 0 0 0.00
+
+SR  0.05  0.05  Client  0 2 4 0 1 0.10
+SR  0.05  0.05  Server  1 1 3 0 0 0.00
+
+SR  0.05  0.05  Client  1 2 4 0 1 0.11
+SR  0.05  0.05  Server  1 1 3 0 0 0.00
+
+SR  0.05  0.05  Client  1 2 3 0 0 0.01
+SR  0.05  0.05  Server  1 1 3 0 0 0.00
+
+SR  0.05  0.05  Client  1 2 3 0 0 0.01
+SR  0.05  0.05  Server  1 1 4 0 1 0.00
+
+SR  0.05  0.05  Client  1 1 3 0 0 0.01
+SR  0.05  0.05  Server  1 1 4 0 1 0.00
+
+SR  0.05  0.05  Client  1 2 3 0 0 0.01
+SR  0.05  0.05  Server  1 1 3 0 0 0.00
+
+SR  0.05  0.05  Client  0 2 4 0 1 0.00
+SR  0.05  0.05  Server  1 2 5 1 1 0.00
+
+SR  0.05  0.05  Client  1 2 3 0 0 0.01
+SR  0.05  0.05  Server  1 1 4 0 1 0.00
+
+
+SR  0.20  0.05  Client  1 2 3 0 0 0.01
+SR  0.20  0.05  Server  1 1 4 0 1 0.00
+
+SR  0.20  0.05  Client  1 2 5 0 2 0.21
+SR  0.20  0.05  Server  1 1 5 0 2 0.00
+
+SR  0.20  0.05  Client  1 2 3 0 0 0.01
+SR  0.20  0.05  Server  1 1 4 0 1 0.00
+
+SR  0.20  0.05  Client  1 2 3 0 0 0.01
+SR  0.20  0.05  Server  1 1 4 0 1 0.00
+
+SR  0.20  0.05  Client  1 2 3 0 0 0.10
+SR  0.20  0.05  Server  1 1 5 0 2 0.00
+
+SR  0.20  0.05  Client  1 2 3 0 0 0.11
+SR  0.20  0.05  Server  1 1 6 0 3 0.00
+
+SR  0.20  0.05  Client  0 2 5 0 2 0.21
+SR  0.20  0.05  Server  1 1 3 0 0 0.00
+
+SR  0.20  0.05  Client  0 2 3 0 0 0.00
+SR  0.20  0.05  Server  1 1 3 0 0 0.00
+
+SR  0.20  0.05  Client  1 2 3 0 0 0.01
+SR  0.20  0.05  Server  1 1 3 0 0 0.00
+
+SR  0.20  0.05  Client  1 2 3 0 0 0.01
+SR  0.20  0.05  Server  1 1 5 0 2 0.00
+
+
+SR  0.20  0.20  Client  1 2 5 0 2 0.21
+SR  0.20  0.20  Server  1 1 15  0 12  0.00
+
+SR  0.20  0.20  Client  1 2 3 0 0 0.01
+SR  0.20  0.20  Server  1 1 3 0 0 0.00
+
+SR  0.20  0.20  Client  0 1 9 0 6 0.61
+SR  0.20  0.20  Server  1 3 12  2 7 0.00
+
+SR  0.20  0.20  Client  1 2 4 0 1 0.41
+SR  0.20  0.20  Server  1 1 12  0 9 0.00
+
+SR  0.20  0.20  Client  1 2 3 0 0 0.00
+SR  0.20  0.20  Server  1 1 7 0 4 0.00
+
+SR  0.20  0.20  Client  1 2 3 0 0 0.00
+SR  0.20  0.20  Server  1 1 8 0 5 0.00
+
+SR  0.20  0.20  Client  1 2 3 0 0 0.20
+SR  0.20  0.20  Server  1 1 11  0 8 0.00
+
+SR  0.20  0.20  Client  0 1 4 0 1 0.11
+SR  0.20  0.20  Server  1 1 3 0 0 0.00
+
+SR  0.20  0.20  Client  1 2 4 0 1 0.11
+SR  0.20  0.20  Server  1 1 3 0 0 0.00
+
+SR  0.20  0.20  Client  1 2 5 0 2 0.21
+SR  0.20  0.20  Server  1 1 4 0 1 0.00
+
+
+SR  0.40  0.40  Client  0 2 5 0 2 0.20
+SR  0.40  0.40  Server  1 5 81  4 74  0.00
+
+SR  0.40  0.40  Client  0 2 7 0 4 0.20
+SR  0.40  0.40  Server  1 1 5 0 2 0.00
+
+SR  0.40  0.40  Client  0 1 4 0 1 0.10
+SR  0.40  0.40  Server  1 1 5 0 2 0.00
+
+SR  0.40  0.40  Client  1 2 3 0 0 0.01
+SR  0.40  0.40  Server  1 1 3 0 0 0.00
+
+SR  0.40  0.40  Client  1 2 3 0 0 0.20
+SR  0.40  0.40  Server  1 1 123 0 120 0.00
+
+SR  0.40  0.40  Client  1 2 8 0 5 0.82
+SR  0.40  0.40  Server  1 1 19  0 16  0.00
+
+SR  0.40  0.40  Client  1 2 6 0 3 0.32
+SR  0.40  0.40  Server  1 1 17  0 14  0.00
+
+SR  0.40  0.40  Client  0 2 51  0 48  4.93
+SR  0.40  0.40  Server  1 12  211 11  197 0.00
+
+SR  0.40  0.40  Client  1 1 45  0 42  4.42
+SR  0.40  0.40  Server  1 1 12  0 9 0.00
+
+SR  0.40  0.40  Client  1 2 8 0 5 0.51
+SR  0.40  0.40  Server  1 1 10  0 7 0.00
+
+
+GBN 0.00  0.00  Client  1 2 3 0 0 0.01
+GBN 0.00  0.00  Server  2 1 3 0 0 0.00
+
+GBN 0.00  0.00  Client  1 1 3 0 0 0.01
+GBN 0.00  0.00  Server  2 1 3 0 0 0.00
+
+GBN 0.00  0.00  Client  1 1 3 0 0 0.01
+GBN 0.00  0.00  Server  2 1 3 0 0 0.00
+
+GBN 0.00  0.00  Client  1 2 3 0 0 0.01
+GBN 0.00  0.00  Server  2 1 3 0 0 0.00
+
+GBN 0.00  0.00  Client  1 2 3 0 0 0.01
+GBN 0.00  0.00  Server  2 1 3 0 0 0.00
+
+GBN 0.00  0.00  Client  1 2 3 0 0 0.01
+GBN 0.00  0.00  Server  2 1 3 0 0 0.00
+
+GBN 0.00  0.00  Client  1 2 3 0 0 0.01
+GBN 0.00  0.00  Server  2 1 3 0 0 0.00
+
+GBN 0.00  0.00  Client  1 2 3 0 0 0.01
+GBN 0.00  0.00  Server  2 1 3 0 0 0.00
+
+GBN 0.00  0.00  Client  1 2 3 0 0 0.01
+GBN 0.00  0.00  Server  2 1 3 0 0 0.00
+
+GBN 0.00  0.00  Client  1 1 3 0 0 0.01
+GBN 0.00  0.00  Server  2 1 3 0 0 0.00
+
+
+GBN 0.05  0.05  Client  2 2 4 0 1 0.31
+GBN 0.05  0.05  Server  1 2 4 0 0 0.00
+
+GBN 0.05  0.05  Client  1 1 3 0 0 0.00
+GBN 0.05  0.05  Server  2 1 3 0 0 0.00
+
+GBN 0.05  0.05  Client  1 2 3 0 0 0.01
+GBN 0.05  0.05  Server  2 1 4 0 1 0.00
+
+GBN 0.05  0.05  Client  1 2 4 0 0 0.60
+GBN 0.05  0.05  Server  3 1 5 0 2 0.00
+
+GBN 0.05  0.05  Client  1 2 3 0 0 0.01
+GBN 0.05  0.05  Server  2 1 4 0 1 0.00
+
+GBN 0.05  0.05  Client  1 2 3 0 0 0.01
+GBN 0.05  0.05  Server  2 1 3 0 0 0.00
+
+GBN 0.05  0.05  Client  1 2 3 0 0 0.01
+GBN 0.05  0.05  Server  2 1 3 0 0 0.00
+
+GBN 0.05  0.05  Client  1 3 4 0 0 0.61
+GBN 0.05  0.05  Server  3 1 5 0 2 0.00
+
+GBN 0.05  0.05  Client  1 2 3 0 0 0.01
+GBN 0.05  0.05  Server  2 1 4 0 1 0.00
+
+GBN 0.05  0.05  Client  3 2 18  0 15  4.56
+GBN 0.05  0.05  Server  4 1 6 0 3 0.00
+
+
+GBN 0.20  0.05  Client  0 2 3 0 0 0.01
+GBN 0.20  0.05  Server  2 1 4 0 1 0.00
+
+GBN 0.20  0.05  Client  1 2 5 0 1 0.91
+GBN 0.20  0.05  Server  3 1 5 0 2 0.00
+
+GBN 0.20  0.05  Client  0 2 3 0 0 0.01
+GBN 0.20  0.05  Server  1 1 3 0 0 0.00
+
+GBN 0.20  0.05  Client  0 3 4 0 0 0.61
+GBN 0.20  0.05  Server  3 1 6 0 3 0.00
+
+GBN 0.20  0.05  Client  2 2 4 0 1 0.31
+GBN 0.20  0.05  Server  2 2 4 0 0 0.00
+
+GBN 0.20  0.05  Client  1 3 4 0 0 0.61
+GBN 0.20  0.05  Server  3 1 5 0 2 0.00
+
+GBN 0.20  0.05  Client  1 3 4 1 0 0.01
+GBN 0.20  0.05  Server  2 1 5 0 2 0.00
+
+GBN 0.20  0.05  Client  1 3 4 1 0 0.01
+GBN 0.20  0.05  Server  2 1 5 0 2 0.00
+
+GBN 0.20  0.05  Client  1 2 4 0 0 0.01
+GBN 0.20  0.05  Server  2 1 4 0 1 0.00
+
+GBN 0.20  0.05  Client  1 2 3 0 0 0.01
+GBN 0.20  0.05  Server  1 1 5 0 2 0.00
+
+
+GBN 0.20  0.20  Client  1 4 5 0 0 0.60
+GBN 0.20  0.20  Server  2 1 5 0 2 0.00
+
+GBN 0.20  0.20  Client  0 1 5 0 2 0.60
+GBN 0.20  0.20  Server  1 2 4 0 0 0.00
+
+GBN 0.20  0.20  Client  1 1 4 0 1 0.31
+GBN 0.20  0.20  Server  2 1 5 0 2 0.00
+
+GBN 0.20  0.20  Client  1 2 3 0 0 0.01
+GBN 0.20  0.20  Server  2 1 6 0 3 0.00
+
+GBN 0.20  0.20  Client  1 1 4 0 1 0.31
+GBN 0.20  0.20  Server  1 2 4 0 0 0.00
+
+GBN 0.20  0.20  Client  1 2 5 0 1 0.31
+GBN 0.20  0.20  Server  2 1 4 0 1 0.00
+
+GBN 0.20  0.20  Client  1 1 3 0 0 0.01
+GBN 0.20  0.20  Server  2 1 5 0 2 0.00
+
+GBN 0.20  0.20  Client  1 4 9 1 4 1.83
+GBN 0.20  0.20  Server  3 2 10  0 6 0.00
+
+GBN 0.20  0.20  Client  1 2 3 0 0 0.01
+GBN 0.20  0.20  Server  2 1 4 0 1 0.00
+
+GBN 0.20  0.20  Client  1 3 4 0 0 0.60
+GBN 0.20  0.20  Server  2 1 7 0 4 0.00
+
+
+GBN 0.40  0.40  Client  0 4 7 0 2 1.21
+GBN 0.40  0.40  Server  2 1 10  0 7 0.00
+
+GBN 0.40  0.40  Client  0 4 7 0 2 0.91
+GBN 0.40  0.40  Server  2 1 11  0 8 0.00
+
+GBN 0.40  0.40  Client  1 4 6 0 1 1.51
+GBN 0.40  0.40  Server  2 1 11  0 8 0.00
+
+GBN 0.40  0.40  Client  1 4 5 0 0 0.01
+GBN 0.40  0.40  Server  1 1 3 0 0 0.00
+
+GBN 0.40  0.40  Client  3 6 45  0 38  12.42
+GBN 0.40  0.40  Server  3 6 18  1 10  0.00
+
+GBN 0.40  0.40  Client  1 3 7 0 3 0.91
+GBN 0.40  0.40  Server  1 3 13  1 8 0.00
+
+GBN 0.40  0.40  Client  1 6 9 0 1 3.33
+GBN 0.40  0.40  Server  4 1 14  0 11  0.00
+
+GBN 0.40  0.40  Client  0 7 9 0 1 2.12
+GBN 0.40  0.40  Server  1 2 12  0 8 0.00
+
+GBN 0.40  0.40  Client  1 5 14  1 8 2.42
+GBN 0.40  0.40  Server  3 3 26  2 21  0.00
+
+GBN 0.40  0.40  Client  1 5 7 0 1 0.91
+GBN 0.40  0.40  Server  3 1 8 0 5 0.00

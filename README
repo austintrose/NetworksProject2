@@ -9,30 +9,27 @@ Server usage:
 Client usage:
   python asciivids.py --client
 
-Datalink Layer Header:
-1 byte  unsigned | checksum
-4 bytes unsigned | datasize
+To specify drop rate, add --drop=N flag, where 0<=N<100
+To specify corrupt rate, add --corrupt=N flag, where 0<=N<100
+To switch from GBN (default) to SR, add --sr flag. Client and server must agree.
 
-TODO:
-    General:
-        - Need to collect and report statistics:
-            - Number of data-link frames transmitted
-            - Number of data-link retransmissions
-            - Number of data-link acknowledgements sent
-            - Number of data-link acknowledgements received
-            - Number of duplicate frames received
-            - Total number of bytes
+Stats:
+    In each run, we set the server and client to the same drop/corrupt
+    combination.
 
-    Application Layer:
-        - Should have max packet payload size 256 bytes.
-        - Must define a few commands, and one command must involve a file transfer.
+    In each run, the results we collect are the sum of client and server
+    reported values. Except for "time to recognize" which is only reported
+    on the client.
 
-    Data Link Layer:
-        - Implement reliable transport with ACKs, NACKs, sequence numbers, etc.
-        - Need to define size of one data link frame, and size of window (probably like 10 frames).
-        - Need mechanism for one application layer packet becoming multiple frames.
-        - Timers for retransmitting unacked: http://stackoverflow.com/a/18406263
+    Each run consisted of the client issuing the "LIST" command, and receiving
+    the full response.
 
-    Physical Layer:
-        - Drop rate integer 0 to 100, probability of dropping each full data link frame.
-        - Corrupt rate integer 0 to 100, probability of randomly altering one byte in a data link frame.
+    The tables show averages over 10 runs.
+
+    SR:
+    0       0
+    5       5
+    20      5
+    20      20
+    40      40
+    70      70
