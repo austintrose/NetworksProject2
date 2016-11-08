@@ -24,6 +24,15 @@ class DataLinkLayer(object):
         # Next packet to send.
         self.next_seq = 0
 
+        self.statistics = {
+            'frames_transmitted': 0,
+            'retransmissions': 0,
+            'acks_sent': 0,
+            'acks_received': 0,
+            'duplicates_received': 0,
+            'time_to_recognize': 0.0
+        }
+
     def start_receive_thread(self):
         self.receive_thread = Thread(target=self.receive_thread_func)
         self.receive_thread.setDaemon(True)
@@ -102,7 +111,9 @@ class DataLinkLayer_GBN(DataLinkLayer):
         self.start_receive_thread()
 
         # Number of unacked packets which can remain in the window at once.
-        self.window_len = 30
+        self.window_len = 5
+
+        self.is_sr = False
 
     def send_blank_ack(self):
         # Create a packet containing the ack number
@@ -110,6 +121,7 @@ class DataLinkLayer_GBN(DataLinkLayer):
 
         #Send the ack packet
         self.send_packet(new_packet)
+        self.statistics['acks_sent'] += 1
 
     def recv_one_frame(self):
 
@@ -144,13 +156,17 @@ class DataLinkLayer_GBN(DataLinkLayer):
 
         # Compare checksums.
         if checksum_unpacked == observed_checksum:
-            print "Got SEQ:%d ACK:%d" % (seq_num_unpacked, ack_num_unpacked)
+            if payload_len_unpacked == 0:
+                self.statistics['acks_received'] += 1
+
             self.received_ack(ack_num_unpacked)
 
             # This is an expected data chunk
             if seq_num_unpacked == self.ack and len(payload) > 0:
                 self.received_data_buffer += payload
                 self.ack = seq_num_unpacked + 1
+            elif seq_num_unpacked < self.ack:
+                self.statistics['duplicates_received'] += 1
 
         if payload_len_unpacked != 0:
             self.send_blank_ack()
@@ -168,6 +184,12 @@ class DataLinkLayer_GBN(DataLinkLayer):
 
         while True:
             if self.send_window and self.send_window[0]['seq'] < ack_num:
+
+                if DEBUG:
+                    if "starwars" in self.send_window[0]['data']:
+                        log_func(self)
+                        print "Done"
+
                 self.send_window = self.send_window[1:]
             else:
                 break
@@ -180,6 +202,7 @@ class DataLinkLayer_GBN(DataLinkLayer):
             for packet in self.send_window:
                 if packet['seq'] <= seqnum:
                     self.send_packet(packet)
+                    self.statistics['retransmissions'] += 1
             if len(self.send_window) != 0:
                 self.start_timer_for(self.send_window[0]['seq'])
         else:
@@ -215,12 +238,12 @@ class DataLinkLayer_GBN(DataLinkLayer):
         self.next_seq += 1
 
     def send_packet(self, pk):
+        self.statistics['frames_transmitted'] += 1
         packet = self.build_packet(pk['data'], pk['seq'])
         self.physical_layer.send(packet)
-        print "Sent SEQ:%d ACK:%d" % (pk['seq'], self.ack)
 
     def start_timer_for(self, seqnum):
-        t = Timer(0.5, self.resend_on_timeout, [seqnum])
+        t = Timer(0.3, self.resend_on_timeout, [seqnum])
         t.start()
 
 class DataLinkLayer_SR(DataLinkLayer):
@@ -237,6 +260,7 @@ class DataLinkLayer_SR(DataLinkLayer):
 
         # Number of unacked packets which can remain in the window at once.
         self.window_len = 30
+        self.is_sr = True
 
     def build_packet(self, payload, seq, ack):
         seq_num = struct.pack("!I", seq)
@@ -258,6 +282,7 @@ class DataLinkLayer_SR(DataLinkLayer):
 
         #Send the ack packet
         self.send_packet(new_packet)
+        self.statistics['acks_sent'] += 1
 
     def update_recv_window(self, recv_packet):
         """
@@ -301,6 +326,8 @@ class DataLinkLayer_SR(DataLinkLayer):
                 if not found:
                     # If the packet is not already in the list insert it
                     self.recv_window.insert(insertindex, recv_packet)
+                else:
+                    self.statistics['duplicates_received'] += 1
             self.send_blank_ack(recv_packet['seq'])
 
     def recv_one_frame(self):
@@ -332,11 +359,11 @@ class DataLinkLayer_SR(DataLinkLayer):
         # Compare checksums.
         if checksum_unpacked == observed_checksum:
 
-            debug_log("Received SEQ:%d, ACK:%d" % (seq_num_unpacked, ack_num_unpacked))
 
             # This is just a blank ack of our data.
             if payload_len_unpacked == 0:
                 self.received_ack(ack_num_unpacked)
+                self.statistics['acks_received'] += 1
 
             # This may be an expected data chunk
             elif seq_num_unpacked >= self.recv_window_base:
@@ -346,16 +373,19 @@ class DataLinkLayer_SR(DataLinkLayer):
             # Otherwise resend an ack for the already gotten chunk
             else :
                 self.send_blank_ack(seq_num_unpacked)
+                self.statistics['duplicates_received'] += 1
 
         # Do nothing if this didn't work.
-        else:
-            debug_log("Checksum failed.")
-            # self.send_blank_ack() I don't think we need to ack here
 
     def received_ack(self, ack_num):
         """
         Mark acked packet, or pop it from the window and move forward the send base if it's the first
         """
+        if DEBUG:
+            if 'starwars' in self.send_window[0]['data']:
+                log_func(self)
+                print "Done"
+
         # Do nothing if the send window is empty
         if len(self.send_window) == 0:
             return
@@ -365,6 +395,7 @@ class DataLinkLayer_SR(DataLinkLayer):
             if self.send_window_base == ack_num:
                 self.send_window.pop(0)
                 self.send_window_base += 1
+
 
                 # Remove all consecutive acked packets whose sequence values match the increasing base
                 while len(self.send_window) > 0 and self.send_window[0]['acked'] == True:
@@ -386,6 +417,7 @@ class DataLinkLayer_SR(DataLinkLayer):
                 if packet['seq'] == seqnum:
                     if packet['acked'] == False:
                         self.send_packet(packet)
+                        self.statistics['retransmissions'] += 1
                         self.start_timer_for(seqnum)
 
     def send(self, data):
@@ -417,8 +449,8 @@ class DataLinkLayer_SR(DataLinkLayer):
 
     def send_packet(self, pk):
         packet = self.build_packet(pk['data'], pk['seq'], pk['ack'])
+        self.statistics['frames_transmitted'] += 1
         self.physical_layer.send(packet)
-        debug_log("Sent SEQ:%d, ACK:%d" % (pk['seq'], pk['ack']))
 
     def start_timer_for(self, seqnum):
         t = Timer(0.1, self.resend_on_timeout, [seqnum])

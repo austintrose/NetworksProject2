@@ -1,7 +1,7 @@
 import sys
 
 # Verbose mode.
-DEBUG = True
+DEBUG = False
 
 # Port the application server listens on.
 SERVER_PORT = 8765
@@ -30,3 +30,21 @@ def sigint_handle(sig, frame):
     print
     print "Bye bye."
     exit(0)
+
+def log_func(inst):
+    with open('logfile', 'a') as f:
+        line = "%s\t%0.2f\t%0.2f\t%s\t%d\t%d\t%d\t%d\t%d\t%0.2f\n" % \
+        (
+            "SR" if inst.is_sr else "GBN",
+            inst.physical_layer.drop_rate,
+            inst.physical_layer.corrupt_rate,
+            "Client" if inst.is_client else "Server",
+            inst.statistics['acks_received'],
+            inst.statistics['acks_sent'],
+            inst.statistics['frames_transmitted'],
+            inst.statistics['duplicates_received'],
+            inst.statistics['retransmissions'],
+            inst.statistics['time_to_recognize']
+        )
+        f.write(line)
+

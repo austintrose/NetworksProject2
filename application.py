@@ -1,5 +1,6 @@
 import struct
 import threading
+import time
 
 from utils import *
 
@@ -53,6 +54,7 @@ class ApplicationLayer(object):
 
         full_packet = command_code + payload_len_packed + payload
         self.send(full_packet)
+        self.started = time.time()
 
     def handle_one_command(self):
         """
@@ -109,6 +111,13 @@ class ClientApplicationLayer(ApplicationLayer):
         # Start the receiving thread.
         self.start_receive_thread()
 
+        self.datalink_layer.is_client = True
+
+        if DEBUG:
+            self.send_command(LIST_QUERY)
+            while True:
+                pass
+
         # Main loop as client.
         while True:
             user_command = sys.stdin.readline()
@@ -128,8 +137,14 @@ class ClientApplicationLayer(ApplicationLayer):
         """
         Handler for a LIST_ANSWER message the client receives.
         """
-
-        print payload
+        if DEBUG:
+            if self.datalink_layer.statistics['time_to_recognize'] == 0.0:
+                self.datalink_layer.statistics['time_to_recognize'] = time.time() - self.started
+            else:
+                log_func(self.datalink_layer)
+                print "Done"
+        else:
+            print payload
 
     def handle_STREAM_ANSWER(self, payload):
         if self.requesting_file is None:
@@ -154,6 +169,8 @@ class ServerApplicationLayer(ApplicationLayer):
             'C': self.handle_STREAM_QUERY
         }
 
+        self.datalink_layer.is_client = False
+
         # Main loop as server.
         self.receive_thread_func()
 
@@ -161,8 +178,8 @@ class ServerApplicationLayer(ApplicationLayer):
         """
         Handler for a LIST_QUERY message the server receives.
         """
-        payload = "Available videos: starwars.mov"
-        self.send_command(LIST_ANSWER, payload)
+        self.send_command(LIST_ANSWER, "Available Videos:")
+        self.send_command(LIST_ANSWER, "starwars.mov")
 
     def handle_STREAM_QUERY(self, payload):
         with open(payload, 'r') as f:
