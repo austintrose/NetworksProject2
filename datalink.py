@@ -259,8 +259,8 @@ class DataLinkLayer_GBN(DataLinkLayer):
         t.start()
 
 class DataLinkLayer_SR(DataLinkLayer):
-    def __init__(self, physical_layer):
-        super(DataLinkLayer_SR, self).__init__(physical_layer)
+    def __init__(self, physical_layer, verbose):
+        super(DataLinkLayer_SR, self).__init__(physical_layer, verbose)
 
         # Create a receive window
         self.recv_window = []
