@@ -8,8 +8,9 @@ from utils import *
 
 
 class DataLinkLayer(object):
-    def __init__(self, physical_layer):
+    def __init__(self, physical_layer, verbose):
         self.physical_layer = physical_layer
+        self.verbose = verbose
 
         # Buffer for data that has been processed correctly, but that the
         # application has not requested.
@@ -101,8 +102,8 @@ class DataLinkLayer(object):
 
 
 class DataLinkLayer_GBN(DataLinkLayer):
-    def __init__(self, physical_layer):
-        super(DataLinkLayer_GBN, self).__init__(physical_layer)
+    def __init__(self, physical_layer, verbose):
+        super(DataLinkLayer_GBN, self).__init__(physical_layer, verbose)
 
         # Expected sequence number
         self.ack = 0
@@ -156,6 +157,9 @@ class DataLinkLayer_GBN(DataLinkLayer):
 
         # Compare checksums.
         if checksum_unpacked == observed_checksum:
+            if self.verbose:
+                print "Recv - SEQ:%d  ACK:%d  Size:%d" % (seq_num_unpacked,  ack_num_unpacked, payload_len_unpacked)
+
             if payload_len_unpacked == 0:
                 self.statistics['acks_received'] += 1
 
@@ -167,6 +171,9 @@ class DataLinkLayer_GBN(DataLinkLayer):
                 self.ack = seq_num_unpacked + 1
             elif seq_num_unpacked < self.ack:
                 self.statistics['duplicates_received'] += 1
+
+        elif self.verbose:
+            print "Recv - Bad checksum"
 
         if payload_len_unpacked != 0:
             self.send_blank_ack()
@@ -240,6 +247,11 @@ class DataLinkLayer_GBN(DataLinkLayer):
     def send_packet(self, pk):
         self.statistics['frames_transmitted'] += 1
         packet = self.build_packet(pk['data'], pk['seq'])
+
+        if self.verbose:
+            print "Send - SEQ:%d  ACK:%d  Size:%d" % (pk['seq'], self.ack,
+                                                      len(pk['data']))
+
         self.physical_layer.send(packet)
 
     def start_timer_for(self, seqnum):
@@ -359,6 +371,8 @@ class DataLinkLayer_SR(DataLinkLayer):
         # Compare checksums.
         if checksum_unpacked == observed_checksum:
 
+            if self.verbose:
+                print "Recv - SEQ:%d  ACK:%d  Size:%d" % (seq_num_unpacked,  ack_num_unpacked, payload_len_unpacked)
 
             # This is just a blank ack of our data.
             if payload_len_unpacked == 0:
@@ -374,6 +388,9 @@ class DataLinkLayer_SR(DataLinkLayer):
             else :
                 self.send_blank_ack(seq_num_unpacked)
                 self.statistics['duplicates_received'] += 1
+
+        elif self.verbose:
+            print "Recv - Bad checksum"
 
         # Do nothing if this didn't work.
 
@@ -450,6 +467,10 @@ class DataLinkLayer_SR(DataLinkLayer):
     def send_packet(self, pk):
         packet = self.build_packet(pk['data'], pk['seq'], pk['ack'])
         self.statistics['frames_transmitted'] += 1
+
+        if self.verbose:
+            print "Send - SEQ:%d  ACK:%d  Size:%d" % (pk['seq'], pk['ack'],
+                                                      len(pk['data']))
         self.physical_layer.send(packet)
 
     def start_timer_for(self, seqnum):

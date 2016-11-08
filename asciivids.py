@@ -17,6 +17,7 @@ if __name__ == "__main__":
     p.add_argument('--drop', type=int, default=DEFAULT_DROP_RATE)
     p.add_argument('--corrupt', type=int, default=DEFAULT_CORRUPTION_RATE)
     p.add_argument('--sr', action='store_true')
+    p.add_argument('--verbose', action='store_true')
 
     args = p.parse_args()
 
@@ -29,9 +30,9 @@ if __name__ == "__main__":
     # Data link layer only needs to know about the physical layer.
     # Different subclasses are implemented for SR and GBN.
     if args.sr:
-        data_link = DataLinkLayer_SR(physical_layer)
+        data_link = DataLinkLayer_SR(physical_layer, args.verbose)
     else:
-        data_link = DataLinkLayer_GBN(physical_layer)
+        data_link = DataLinkLayer_GBN(physical_layer, args.verbose)
 
     # Application layer only needs to know about data link layer.
     # Different sublasses are implemented for client, or server.

@@ -13,6 +13,8 @@ STREAM_QUERY = "STREAM_QUERY"
 LIST_ANSWER = "LIST_ANSWER"
 STREAM_ANSWER = "STREAM_ANSWER"
 
+ERROR = "ERROR"
+
 class ApplicationLayer(object):
     def __init__(self, datalink_layer):
         """
@@ -26,7 +28,8 @@ class ApplicationLayer(object):
             LIST_QUERY: 'A',
             LIST_ANSWER: 'B',
             STREAM_QUERY: 'C',
-            STREAM_ANSWER: 'D'
+            STREAM_ANSWER: 'D',
+            ERROR: 'E'
         }
 
     def send(self, data):
@@ -106,7 +109,9 @@ class ClientApplicationLayer(ApplicationLayer):
         # Handler functions for different command codes.
         self.command_handlers = {
             'B': self.handle_LIST_ANSWER,
-            'D': self.handle_STREAM_ANSWER
+            'D': self.handle_STREAM_ANSWER,
+            'E': self.handle_ERROR
+
         }
 
         # Start the receiving thread.
@@ -149,16 +154,24 @@ class ClientApplicationLayer(ApplicationLayer):
 
     def handle_STREAM_ANSWER(self, payload):
         if self.requesting_file is None:
+            print "Saving as asciivids_%s..." % self.requesting_filename
             self.requesting_file = open("asciivids_" + self.requesting_filename, 'w')
 
         if payload == "":
             self.requesting_file.close()
             self.requesting_file = None
-            print "Done receiving %s" % self.requesting_filename
+            print "Done receiving asciivids_%s. Press any key to play." % \
+                  self.requesting_filename
             playfile("asciivids_" + self.requesting_filename)
 
         else:
             self.requesting_file.write(payload)
+
+    def handle_ERROR(self, payload):
+        if self.requesting_file:
+            self.requesting_file.close()
+            self.requesting_file = None
+        print "ERROR from server: ", payload
 
 
 class ServerApplicationLayer(ApplicationLayer):
@@ -184,12 +197,15 @@ class ServerApplicationLayer(ApplicationLayer):
         self.send_command(LIST_ANSWER, "starwars.mov")
 
     def handle_STREAM_QUERY(self, payload):
-        with open(payload, 'r') as f:
-            while True:
-                got = f.read(128)
-                if got == "":
-                    break
-                self.send_command(STREAM_ANSWER, got)
-            self.send_command(STREAM_ANSWER)
+        try:
+            with open(payload, 'r') as f:
+                while True:
+                    got = f.read(128)
+                    if got == "":
+                        break
+                    self.send_command(STREAM_ANSWER, got)
+                self.send_command(STREAM_ANSWER)
+        except IOError:
+            self.send_command(ERROR, "Requested file not found.")
 
 

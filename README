@@ -13,6 +13,8 @@ To specify drop rate, add --drop=N flag, where 0<=N<100
 To specify corrupt rate, add --corrupt=N flag, where 0<=N<100
 To switch from GBN (default) to SR, add --sr flag. Client and server must agree.
 
+To see the RDT protocols in action, add the --verbose flag.
+
 Stats:
     In each run, we set the server and client to the same drop/corrupt
     combination.
@@ -26,10 +28,3 @@ Stats:
 
     The tables show averages over 10 runs.
 
-    SR:
-    0       0
-    5       5
-    20      5
-    20      20
-    40      40
-    70      70

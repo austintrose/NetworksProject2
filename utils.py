@@ -1,7 +1,8 @@
 import sys
+import curses
 
-# Verbose mode.
 DEBUG = False
+
 
 # Port the application server listens on.
 SERVER_PORT = 8765
@@ -26,6 +27,10 @@ def sigint_handle(sig, frame):
     """
     Handler for exiting gracefully on SIGINT.
     """
+    try:
+        curses.endwin()
+    except Exception:
+        pass
 
     print
     print "Bye bye."
