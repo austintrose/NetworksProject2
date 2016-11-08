@@ -3,6 +3,7 @@ import threading
 import time
 
 from utils import *
+from pycurse import *
 
 # Constant strings for names of command types the client can issue.
 LIST_QUERY = "LIST_QUERY"
@@ -154,6 +155,7 @@ class ClientApplicationLayer(ApplicationLayer):
             self.requesting_file.close()
             self.requesting_file = None
             print "Done receiving %s" % self.requesting_filename
+            playfile("asciivids_" + self.requesting_filename)
 
         else:
             self.requesting_file.write(payload)

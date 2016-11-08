@@ -9,12 +9,12 @@ def playfile(filename):
         xlen = 0
         ylen = 0
         for line in fi:
-            if not line.strip == "end":
+            if xlen == 0:
+                xlen = len(line)
+            if not line.strip() == "end":
                 ylen += 1
             else:
-                xlen = len(line.strip())
                 break
-
 
     # Initialize ncurses screen
     myscreen = curses.initscr()
@@ -25,17 +25,18 @@ def playfile(filename):
     # Get size of the window
     y,x = myscreen.getmaxyx()
 
-
     # Read file line by line
     with open(filename) as fp:
-        yini = (y/2)
+        yini = (y/2) - ylen/2
         ydown = yini
-        xini = (x/2)
+        xini = (x/2) - xlen/2
         for line in fp:
+            # Add a 'project 2' title
+            myscreen.addstr(2, 2, "Project 2")
 
             # Stop signifies end of the movie
             if line.strip() == "stop":
-                return
+                break
 
             # Until the end of a frame, add line by line to the window
             if not line.strip() == "end":
@@ -48,7 +49,7 @@ def playfile(filename):
                 ydown = yini
                 # Display window once complete
                 myscreen.refresh()
-                sleep(.5)
+                sleep(1)
 
     # Wait for an input character
     myscreen.getch()
@@ -56,10 +57,6 @@ def playfile(filename):
     # End window
     curses.endwin()
 
-    print "xlen " + str(xlen)
-    print "ylen " + str(ylen)
 
-
-playfile('starwars.mov')
 
 
